@@ -1,0 +1,14 @@
+.*
+coverage/
+dist/
+lib/
+node_modules/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.log
+.DS_Store

@@ -1,0 +1,7 @@
+coverage/
+dist/
+node_modules/
+/docs-slate/
+/playground/
+/tests/json-test-suite/
+/tests/yaml-test-suite/
