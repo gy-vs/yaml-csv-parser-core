@@ -17,6 +17,51 @@ describe('tabs as indentation', () => {
     const doc = YAML.parseDocument('\tx: y')
     expect(doc.errors).toMatchObject([{ code: 'TAB_AS_INDENT' }])
   })
+
+  // DK95: tabs after spaces are separators, not indentation
+  test('space followed by tab is a valid value separator (DK95/0)', () => {
+    const doc = YAML.parseDocument('foo:\n \tbar\n')
+    expect(doc.errors).toHaveLength(0)
+    expect(doc.toJS()).toEqual({ foo: 'bar' })
+  })
+
+  test('tab-only blank line between map entries is valid (DK95/4)', () => {
+    const doc = YAML.parseDocument('foo: 1\n\t\nbar: 2\n')
+    expect(doc.errors).toHaveLength(0)
+    expect(doc.toJS()).toEqual({ foo: 1, bar: 2 })
+  })
+
+  test('space-tab blank line between map entries is valid (DK95/5)', () => {
+    const doc = YAML.parseDocument('foo: 1\n \t\nbar: 2\n')
+    expect(doc.errors).toHaveLength(0)
+    expect(doc.toJS()).toEqual({ foo: 1, bar: 2 })
+  })
+
+  // Y79Y: a tab acting as indentation directly after a block indicator is invalid
+  test.each([
+    '-\t-\n',
+    '- \t-\n',
+    '?\t-\n',
+    '? -\n:\t-\n',
+    '?\tkey:\n',
+    '? key:\n:\tkey:\n'
+  ])('tab after - ? : block indicators is invalid (Y79Y/4-9): %j', src => {
+    const doc = YAML.parseDocument(src)
+    expect(doc.errors.map(e => e.code)).toContain('TAB_AS_INDENT')
+  })
+
+  // Y79Y/0: tab-only block scalar content line must be included in the value
+  // so the missing indentation gets reported
+  test('tab-only line in unindented block scalar is an error (Y79Y/0)', () => {
+    const doc = YAML.parseDocument('foo: |\n\t\nbar: 1\n')
+    expect(doc.errors.map(e => e.code)).toContain('BAD_INDENT')
+  })
+
+  test('space-tab block scalar content line is valid (Y79Y/1)', () => {
+    const doc = YAML.parseDocument('foo: |\n \t\nbar: 1\n')
+    expect(doc.errors).toHaveLength(0)
+    expect(doc.toJS()).toEqual({ foo: '\t\n', bar: 1 })
+  })
 })
 
 test('eemeli/yaml#6', () => {
